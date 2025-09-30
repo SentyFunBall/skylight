@@ -5,5 +5,5 @@ build/
 .editorconfig
 .clang-format
 
-lua-5.4.7
+lua-5.4.7/*
 !lua-5.4.7/CMakeLists.txt
