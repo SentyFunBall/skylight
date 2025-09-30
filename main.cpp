@@ -112,13 +112,13 @@ lua_State* startLua() {
 
 // Load the XML config file and populate configProperties
 void loadXML() {
-        // Load the mod's config file
+    // Load the mod's config file
     std::string configPath = scriptDir + "/config.xml";
     SKL_CASSERT(std::filesystem::exists(configPath), "Error: Config file not found: " + configPath);
 
     XmlDocument doc;
     // nasty
-    SKL_CASSERT(doc.load_file(configPath.c_str()).code == scl::xml::OK, "Error loading config file");
+    SKL_CASSERT(!doc.load_file(configPath.c_str()).code, "Error loading config file");
 
     // Get the mod properties
     std::vector<XmlElem*> prop = doc.find_children("properties");
@@ -151,30 +151,12 @@ void loadXML() {
     }
 }
 
-int main(int argc, char* argv[]) {
-    startTime = std::chrono::high_resolution_clock::now();
-    // process command line arguments
-    if (argc > 1) {
-        if (argv[1] == std::string("--help") || argv[1] == std::string("-h")) {
-            std::cout << "Usage: " << argv[0] << " [script_directory (./scripts by default)]" << std::endl;
-            return 0;
-        } else {
-            scriptDir = argv[1];
-        }
-    }
-
-    // Various initializations
-    scl::init();
-    L = startLua();
-
-    loadXML();
-
+void doLua() {
     // Load and run the Lua script
     std::string scriptPath = scriptDir + "/main.lua";
-    SKL_CASSERT(std::filesystem::exists(scriptPath), "Error: Script file not found: " + scriptPath);
-
-    cout << "The remaining output is the script and related output" << std::endl;
-
+    SKL_CASSERT(std::filesystem::exists(scriptPath),
+                "Error: Script file not found: " + scriptPath);
+    
     if (luaL_dofile(L, scriptPath.c_str()) != LUA_OK) {
         std::cerr << "Error running script: " << lua_tostring(L, -1) << std::endl;
         lua_pop(L, 1); // remove error message from stack
@@ -216,6 +198,29 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+}
+
+int main(int argc, char* argv[]) {
+    startTime = std::chrono::high_resolution_clock::now();
+    // process command line arguments
+    if (argc > 1) {
+        if (argv[1] == std::string("--help") || argv[1] == std::string("-h")) {
+            std::cout << "Usage: " << argv[0] << " [script_directory (./scripts by default)]" << std::endl;
+            return 0;
+        } else {
+            scriptDir = argv[1];
+        }
+    }
+
+    // Various initializations
+    scl::init();
+    L = startLua();
+    loadXML();
+
+    // do lua
+    cout << "The remaining output is the script and related output"
+         << std::endl;
+    doLua();
 
     scl::terminate();
     lua_close(L);

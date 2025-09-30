@@ -80,7 +80,7 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
     } else if (lua_isboolean(L, 2)) {
         value = lua_toboolean(L, 2) ? "true" : "false";
     } else if (lua_isnumber(L, 2)) {
-        value = std::to_string(lua_tonumber(L, 2)).c_str(); // this is ridiculous
+        value = scl::string::fmt("%lf", lua_tonumber(L, 2));
     } else {
         lua_pushboolean(L, false);
         return 1;
@@ -111,10 +111,7 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
                 valueAttr->set_data(doc, value);
             } else {
                 // Key exists but no value attribute??? Create it
-                valueAttr = new scl::xml::XmlAttr();
-                valueAttr->set_tag(doc, "value");
-                valueAttr->set_data(doc, value);
-                setting->add_attr(valueAttr);
+                setting->add_attr(doc.new_attr("value", value));
             }
             foundExisting = true;
             break;
@@ -123,16 +120,11 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
 
     if (!foundExisting) {
         // Key not found, add new setting
-        scl::xml::XmlElem* elem = new scl::xml::XmlElem();
-        elem->set_tag(doc, "setting");
-        scl::xml::XmlAttr* keyAttr = new scl::xml::XmlAttr();
-        keyAttr->set_tag(doc, "key");
-        keyAttr->set_data(doc, key);
-        elem->add_attr(keyAttr);
+        scl::xml::XmlElem* elem = doc.new_elem("setting");
 
-        scl::xml::XmlAttr* valueAttr = new scl::xml::XmlAttr();
-        valueAttr->set_tag(doc, "value");
-        valueAttr->set_data(doc, value);
+        scl::xml::XmlAttr* keyAttr = doc.new_attr("key", key);
+        elem->add_attr(keyAttr);
+        scl::xml::XmlAttr* valueAttr = doc.new_attr("value", value);
         elem->add_attr(valueAttr);
 
         writeable[0]->add_child(elem);
@@ -140,7 +132,7 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
 
     // Write to disk 
     scl::stream file;
-    file.open(configPath.c_str(), "w");
+    file.open(configPath.c_str(), true);
 
     doc.print(file);
     file.flush();
