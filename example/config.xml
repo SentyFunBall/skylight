@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Mod>
+  <properties name="Senty&apos;s Mod" desc="My cool mod" author="Senty" version="1.0"/>
+  <writeable>
+    <setting key="difficulty" value="normal"/>
+    <setting key="soundVolume" value="1.3"/>
+    <setting key="nameplateName" value="Zombie"/>
+    <setting key="spawnDuringDay" value="true"/>
+  </writeable>
+</Mod>
