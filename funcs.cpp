@@ -95,20 +95,21 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
         lua_pushboolean(L, false);
         return 1;
     }
-    std::vector<scl::xml::XmlElem*> writeable = doc.find_children("writeable");
+
+    auto writeable = doc.find_children("writeable");
     if (writeable.empty()) {
         lua_pushboolean(L, false);
         return 1;
     }
 
     // Search for and update existing setting if it exists
-    std::vector<scl::xml::XmlElem*> settings = writeable[0]->find_children("setting");
+    auto settings = writeable[0]->find_children("setting");
     for (scl::xml::XmlElem* setting : settings) {
-        scl::xml::XmlAttr* attr = setting->find_attr("key");
-        if (attr && attr->data() == key) {
+        scl::xml::XmlAttr* keyAttr = setting->find_attr("key");
+        if (keyAttr && keyAttr->data() == key) {
             scl::xml::XmlAttr* valueAttr = setting->find_attr("value");
             if (valueAttr) {
-                valueAttr->set_data(doc, value);
+                valueAttr->set_data(value);
             } else {
                 // Key exists but no value attribute??? Create it
                 setting->add_attr(doc.new_attr("value", value));
@@ -132,7 +133,7 @@ int Lua::LFuncs::setConfigProperty(lua_State* L) {
 
     // Write to disk 
     scl::stream file;
-    file.open(configPath.c_str(), true);
+    file.open(configPath.c_str(), scl::OpenMode::WRITE, true);
 
     doc.print(file);
     file.flush();
